@@ -74,9 +74,9 @@ if (nargin==5)
 
     %egyenletes eloszlásba személyek kezdeti helyei (lineáris indexeléssel)
     not_obj_indices=find(temp==0);                               %indexek ahol nincs tárgy se fal
-    randindices=randperm(size(not_obj_indices,1),num_of_people); %ebbõl random 50 darab index(ahova majd kezdetben személy kerül)
-    randindices=randindices';
-    not_obj_indices=not_obj_indices(randindices);                %személyek kezdeti (lineáris) indexei
+    rand_indices=randperm(size(not_obj_indices,1),num_of_people); %ebbõl random 50 darab index(ahova majd kezdetben személy kerül)
+    rand_indices=rand_indices';
+    not_obj_indices=not_obj_indices(rand_indices);                %személyek kezdeti (lineáris) indexei
     temp=zeros(size(floor_field));
     temp(not_obj_indices)=1;
     temp=num2cell(temp);
