@@ -175,21 +175,24 @@ function [newszomsz]=SzomszedberakEsFalkiszed(floor_field,nowszomsz)
     newszomsz=cat(2,x,y);
 end
 
-%az ajtók szomszédainak megkeresése
+%az ajtók nemajtó/fal szomszédainak megkeresése (cska ha az ajtó a szélen
+%van) szebb, mint anno
 %sajnos a sarkokon ez megbukik
 function [szomszcell]=doorszomsz(door,N1,N2)
     szomszcell=[];
 
     for ii=1:size(door,1)
-        if door(ii,2)==1
-            szomszcell=[szomszcell;door(ii,1),door(ii,2)+1;door(ii,1)+1,door(ii,2)+1;door(ii,1)-1,door(ii,2)+1]; end
-        if door(ii,2)==N2
-            szomszcell=[szomszcell;door(ii,1),door(ii,2)-1;door(ii,1)+1,door(ii,2)-1;door(ii,1)-1,door(ii,2)+1]; end
-        if door(ii,1)==1
-            szomszcell=[szomszcell;door(ii,1)+1,door(ii,2);door(ii,1)+1,door(ii,2)+1;door(ii,1)+1,door(ii,2)-1]; end
-        if door(ii,1)==N1
-            szomszcell=[szomszcell;door(ii,1)-1,door(ii,2);door(ii,1)-1,door(ii,2)+1;door(ii,1)-1,door(ii,2)+1]; end
-        
+        door_ii=door(ii,:);
+        if door_ii(2)==1
+            door_szomsz=door_ii+[0,1;1,1;-1,1]; end
+        if door_ii(2)==N2
+            door_szomsz=door_ii+[0,-1;1,-1;-1,1]; end
+        if door_ii(1)==1
+            door_szomsz=door_ii+[1,0;1,1;1,-1]; end
+        if door_ii(1)==N1
+            door_szomsz=door_ii+[-1,0;-1,1;-1,1]; end
+
+        szomszcell=[szomszcell;door_szomsz];
     end
     
     szomszcell=unique(szomszcell,'rows');       %duplikátumok kiszedése%
