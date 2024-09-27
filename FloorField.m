@@ -10,9 +10,10 @@ function [floor_field]=FloorField(N1,N2,doors)
         %ajtók elhelyezkedése a következõképpen: [elsõ ajtó elsõ
         %koordinátája, elsõ ajtó második koordinátája; második ajtó elsõ
         %koordinátája, második ajtó második koordinátája;...]
+        %[oszlop,sor]---EZT MAJD JAVÍT
         
     %Kimenet:
-        %floor_field: Statikus potenciálmezõ (minden cellához egy érték.)
+        %floor_field: Statikus potenciálmezõ (MÁTRIX) (minden cellához egy érték.)
         
 %N1=14;
 %N2=18;
@@ -21,12 +22,16 @@ function [floor_field]=FloorField(N1,N2,doors)
 lambda=3/2;                                            %diagonális mozgás "távolsága"
 %lambda=500;                                           %diagonális mozgás nem megengedett
 
+%1:ajtó
+%200:üres
+%500:obstacle
+
 %osztályterem
 if (nargin==0)
     %
-    osztalyterem=load('oterem.mat');
+    osztalyterem=load('oterem.mat');%MIeRT STRUCT TALaN KeSoBB MIATT, CHECK
     floor_field=struct2array(osztalyterem.osztalyterem);
-    N1=size(floor_field,1)-2;
+    N1=size(floor_field,1)-2;%-2 a fal  miatt
     N2=size(floor_field,2)-2;
     %ajtó helyének lehetséges megváltoztatása
     %{
@@ -36,7 +41,7 @@ if (nargin==0)
     [doors_x,doors_y]=find(floor_field==1);
     doors=cat(2,doors_x,doors_y);
     
-%üres terem
+%üres terem (fallal dim n1+2 x n2+2)
 elseif (nargin==3)
     floor_field=200*ones(N1,N2);                       %floor field inicializálása
     floor_field=padarray(floor_field,[1,1],500,'both');%falak
