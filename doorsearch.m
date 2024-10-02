@@ -1,5 +1,5 @@
-%function doors_cell=doorsearch(floor_field)
-load('proba.mat');
+function doors_cell=doorsearch(floor_field)
+%load('proba.mat');
 %floor_field(4,1)=1;
 %floor_field(6,1)=1;
 %floor_field(9,1)=500;
@@ -64,4 +64,6 @@ function [szomsz,nonszomsz]=add_door_szomsz(door_tmp, doors_possible_szomsz,N1,N
                 end
         end
     end
+end
+
 end

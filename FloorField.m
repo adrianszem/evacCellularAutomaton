@@ -46,12 +46,15 @@ elseif (nargin==3)
     floor_field=200*ones(N1,N2);                       %floor field inicializálása
     floor_field=padarray(floor_field,[1,1],500,'both');%falak
  
-    for kk=1:size(doors,1)                              %ajtók
-        door=doors(kk,:);
-        floor_field(sub2ind(size(floor_field),door(1),door(2)))=1;       
-    end
+    floor_field(sub2ind(size(floor_field),doors(:,1),doors(:,2)))=1;   %ajtók  
+
+elseif (nargin==2)
+    floor_field=N1;
+    doors=N2;
+    N1=size(floor_field,1)-2;
+    N2=size(floor_field,2)-2;
     
-elseif (nargin~=3 && nargin ~=0)
+elseif (nargin~=3 && nargin ~=0 && nargin ~=2)
     error('Zero or 3 input arguments is required');
 end
 
@@ -80,12 +83,11 @@ while sum(ismember(floor_field(:),200))~=0             %ameddig nincs minden cel
        if floor_field(szomsz(1),szomsz(2))>floor_field(szomsz(1),szomsz(2)-1)+1 && floor_field(szomsz(1),szomsz(2))~=500
            floor_field(szomsz(1),szomsz(2))=floor_field(szomsz(1),szomsz(2)-1)+1; nowszomsz=[nowszomsz;szomsz(1),szomsz(2)]; end
 
-       
        if floor_field(szomsz(1),szomsz(2))>floor_field(szomsz(1)+1,szomsz(2)-1)+lambda && floor_field(szomsz(1),szomsz(2))~=500
            floor_field(szomsz(1),szomsz(2))=floor_field(szomsz(1)+1,szomsz(2)-1)+lambda; nowszomsz=[nowszomsz;szomsz(1),szomsz(2)]; end
        
-       if floor_field(szomsz(1),szomsz(2))>floor_field(szomsz(1)-1,szomsz(2)-1)+lambda && floor_field(szomsz(1),szomsz(2))~=500
-           floor_field(szomsz(1),szomsz(2))=floor_field(szomsz(1)-1,szomsz(2)-1)+lambda; nowszomsz=[nowszomsz;szomsz(1),szomsz(2)]; end
+       if floor_field(szomsz(1),szomsz(2))>floor_field(szomsz(1)+1,szomsz(2)+1)+lambda && floor_field(szomsz(1),szomsz(2))~=500
+           floor_field(szomsz(1),szomsz(2))=floor_field(szomsz(1)+1,szomsz(2)+1)+lambda; nowszomsz=[nowszomsz;szomsz(1),szomsz(2)]; end
        
        if floor_field(szomsz(1),szomsz(2))>floor_field(szomsz(1)-1,szomsz(2)+1)+lambda && floor_field(szomsz(1),szomsz(2))~=500
            floor_field(szomsz(1),szomsz(2))=floor_field(szomsz(1)-1,szomsz(2)+1)+lambda; nowszomsz=[nowszomsz;szomsz(1),szomsz(2)]; end
@@ -95,9 +97,10 @@ while sum(ismember(floor_field(:),200))~=0             %ameddig nincs minden cel
        
     end
     
-    szomszcell=SzomszedberakEsFalkiszed(floor_field,nowszomsz);%            
+    szomszcell=SzomszedberakEsFalkiszed(floor_field,nowszomsz);%nemcsak fal, hanem objektum...            
     
 end
+
 
 %PlotFloorField(floor_field);                      %floor_field plotolása
 
@@ -146,11 +149,11 @@ function PlotFloorField(floor_field)
     
     cb=colorbar;
     cb.Position=[0.9189 0.1900 0.0236 0.6500]; %colorbar helyének megváltoztatása
-    
-end
+end  
 
 function [newszomsz]=SzomszedberakEsFalkiszed(floor_field,nowszomsz)
     nowszomsz=unique(nowszomsz,'rows');
+    %{
     newszomsz=[];
     
     for ii=1:size(nowszomsz,1)
@@ -165,9 +168,22 @@ function [newszomsz]=SzomszedberakEsFalkiszed(floor_field,nowszomsz)
                 nowszomsz(ii,1)+1, nowszomsz(ii,2)-1;
                 nowszomsz(ii,1)-1, nowszomsz(ii,2)+1];
     end
+    %}
+    %{
+    %kerdes, hogy ez a gyorsabb, vagy a fenti...
+    newszomsz=zeros(8*size(nowszomsz,2),2);
+    for ii=1:size(nowszomsz,1)
+        newszomsz(8*(ii-1)+1:8*ii,:)=nowszomsz(ii,:)+[1,0;-1,0;0,1;0,-1;1,1;-1,-1;1,-1;-1,1];
+    end
+    %}
+    %vektorizált:leggyorsabb, de  bsxfun-all talán méggyorsabb is lehetne...
+    %
+    a=[1,0;-1,0;0,1;0,-1;1,1;-1,-1;1,-1;-1,1];
+    newszomsz=nowszomsz(reshape(repmat(1:size(nowszomsz,1),8,1),size(nowszomsz,1)*8,1),:)+repmat(a,size(nowszomsz,1),1);
+    %}
     
     newszomsz=unique(newszomsz,'rows');
-    %a fal indexeinek kiszedése
+    %a fal és objektumok indexeinek kiszedése
     linear_newszomsz = sub2ind(size(floor_field), newszomsz(:,1), newszomsz(:,2));
     AA=(floor_field(linear_newszomsz)~=500 & floor_field(linear_newszomsz)~=1);
     linear_newszomsz=linear_newszomsz(AA);
@@ -175,27 +191,39 @@ function [newszomsz]=SzomszedberakEsFalkiszed(floor_field,nowszomsz)
     newszomsz=cat(2,x,y);
 end
 
+
+
+
 %az ajtók nemajtó/fal szomszédainak megkeresése (cska ha az ajtó a szélen
 %van) szebb, mint anno
 %sajnos a sarkokon ez megbukik
 function [szomszcell]=doorszomsz(door,N1,N2)
-    szomszcell=[];
+    %{
+    szomszcell=zeros(size(door,1)*3,2);
 
     for ii=1:size(door,1)
         door_ii=door(ii,:);
         if door_ii(2)==1
             door_szomsz=door_ii+[0,1;1,1;-1,1]; end
-        if door_ii(2)==N2
-            door_szomsz=door_ii+[0,-1;1,-1;-1,1]; end
+        if door_ii(2)==N2+2
+            door_szomsz=door_ii+[0,-1;-1,-1;1,-1]; end
         if door_ii(1)==1
             door_szomsz=door_ii+[1,0;1,1;1,-1]; end
-        if door_ii(1)==N1
-            door_szomsz=door_ii+[-1,0;-1,1;-1,1]; end
+        if door_ii(1)==N1+2
+            door_szomsz=door_ii+[-1,0;-1,1;-1,-1]; end
 
-        szomszcell=[szomszcell;door_szomsz];
+        szomszcell(3*(ii-1)+1:3*ii,:)=door_szomsz;
     end
-    
-    szomszcell=unique(szomszcell,'rows');       %duplikátumok kiszedése%
+    %}
+    %vektorizált változat (bsxfun késöbb)
+    a=[1,0;-1,0;0,1;0,-1;1,1;-1,-1;1,-1;-1,1];
+    szomszcell=door(reshape(repmat(1:size(door,1),8,1),size(door,1)*8,1),:)+repmat(a,size(door,1),1);
+    szomszcell=unique(szomszcell,'rows');       %duplikátumok kiszedése
+    %kiszed ami a termen kivül van, vagy fal
+    l_tmp=sum(szomszcell>[0,0] & szomszcell<[N1+2,N2+2],2)==2;
+    szomszcell=reshape(szomszcell([l_tmp,l_tmp]),[],2);
+    l_tmp=floor_field(sub2ind(size(floor_field),szomszcell(:,1),szomszcell(:,2)))~=500&floor_field(sub2ind(size(floor_field),szomszcell(:,1),szomszcell(:,2)))~=1;
+    szomszcell=reshape(szomszcell([l_tmp,l_tmp]),[],2);
 end
 
 end
