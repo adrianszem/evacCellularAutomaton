@@ -18,9 +18,9 @@ doors_cell={};
         doors=doors(2:end,:);
         rest_doors_tmp=doors;
         szomsz=[];
-        [szomsz,nonszomsz]=add_door_szomsz(door_tmp, rest_doors_tmp,N1,N2,szomsz);%empty output is no problem
+        [szomsz,non_szomsz]=add_door_szomsz(door_tmp, rest_doors_tmp,N1,N2,szomsz);%empty output is no problem
         doors_cell(end+1)={[door_tmp;szomsz]};
-        doors=nonszomsz;
+        doors=non_szomsz;
 
     end
 
@@ -34,16 +34,16 @@ function door1_szomsz=door_szomsz(door1,N1,N2)
     door1_szomsz=reshape(door1_szomsz([i_tmp2,i_tmp2]),[],2);
 end
 
-function [is_one_door_logi,whichdoor]=is_one_door(door1_szomsz,door2)
+function [is_one_door_logi,which_door]=is_one_door(door1_szomsz,door2)
     tmp=sum(door1_szomsz==door2,2)==2;
-    whichdoor=reshape(door1_szomsz(repmat(tmp,1,2)),[],2);
+    which_door=reshape(door1_szomsz(repmat(tmp,1,2)),[],2);
     is_one_door_logi=sum(tmp);
 
 end
 
-function [szomsz,nonszomsz]=add_door_szomsz(door_tmp, doors_possible_szomsz,N1,N2,szomsz)
+function [szomsz,non_szomsz]=add_door_szomsz(door_tmp, doors_possible_szomsz,N1,N2,szomsz)
     
-    nonszomsz=doors_possible_szomsz;
+    non_szomsz=doors_possible_szomsz;
     if isempty(doors_possible_szomsz)
         return;
     else
@@ -53,11 +53,11 @@ function [szomsz,nonszomsz]=add_door_szomsz(door_tmp, doors_possible_szomsz,N1,N
                 if is_one_door_logi
                     szomsz=[szomsz;doors_possible_szomsz(j,:)];
                     if j~=size(doors_possible_szomsz,1)
-                    nonszomsz=doors_possible_szomsz([1:j-1,j+1:end],:);
+                    non_szomsz=doors_possible_szomsz([1:j-1,j+1:end],:);
                     else 
-                    nonszomsz=doors_possible_szomsz(1:j-1,:);
+                    non_szomsz=doors_possible_szomsz(1:j-1,:);
                     end
-                    [szomsz,nonszomsz]=add_door_szomsz(doors_possible_szomsz(j,:),nonszomsz,N1,N2,szomsz);%recursion
+                    [szomsz,non_szomsz]=add_door_szomsz(doors_possible_szomsz(j,:),non_szomsz,N1,N2,szomsz);%recursion
                 else
                     %nonszomsz=[nonszomsz;doors_possible_szomsz(j,:)];%
                     %check later because this looks a bit weird

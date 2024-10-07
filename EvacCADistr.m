@@ -1,6 +1,6 @@
 %egy lefutás 0.150 sec, ennek fele a FloorField fgv, melyet 3x hív meg
 num_of_people=20;
-tnum=30;
+t_num=30;
 alpha=1;
 
 terem=open('proba.mat');
@@ -42,7 +42,7 @@ temp=zeros(size(floor_field));
 temp([2:11],[2:4])=1;
 temp=num2cell(temp);
 [Grid.isperson]=temp{:};                                     %cella feltöltése
-plot_timesteps=round(linspace(0,tnum,4));                    %melyik idõlépéseket plotolja
+plot_timesteps=round(linspace(0,t_num,4));                    %melyik idõlépéseket plotolja
 
 %fal vagy objektum értékek hozzáadása 
 temp=(floor_field==500);
@@ -52,10 +52,10 @@ temp1=num2cell(temp);
 plot_timemat=[Grid];                                         %kezdeti elhelyezkedés plotoláshoz
 
 %floor_field értékek hozzáadása
-temp=num2cell(calc_dynamic_floor_field(Grid,floor_fields_mtx,alpha,doors));
+temp=num2cell(CalcDynamicFloorField(Grid,floor_fields_mtx,alpha,doors));
 [Grid.ffval]=temp{:};
 
-for t=1:tnum
+for t=1:t_num
 
     person_coords=find([Grid.isperson]==1);                     %megkeresem a személyek koordinátáit
     rand_person_coords_indices=randperm(size(person_coords,2)); %indexeket hozok létre
@@ -63,9 +63,9 @@ for t=1:tnum
     
     %find((sort(person_coords)==find([Grid.isperson]==1))==0)%csekk: a kettõ ugyanaz
     
-    NewGrid=Grid;                                               %következõ idõlépés cellája
+    new_grid=Grid;                                               %következõ idõlépés cellája
     ttt=num2cell(zeros(size(Grid)));                            %nullára inicializálás
-    [NewGrid.isperson]=ttt{:};
+    [new_grid.isperson]=ttt{:};
     %ahhoz hogy egy idõpontban több személy ne tudjon kimenni ugyanazon az
     %ajtó koordinátán
     %is_door_occupied=false([1,size(doors,2)]);
@@ -76,19 +76,19 @@ for t=1:tnum
         
         %izgulás beletevése:5% az esély arra, hogy nem lép semerre
         if rand<=0.05
-            NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             continue;
         end
         
         %ha már az ajtóban van,"eltûnik" a newgridbõl (pontosabban a köv.
         %idõponthoz tartozó cellából)
         if isempty(find((sum(vertcat(doors{:})==[instant_coord_x,instant_coord_y],2))==2,1))==false %régi kódban a doors nem cellak%isempty(find((sum(doors==[instant_coord_x,instant_coord_y],2))==2,1))==false
-            NewGrid(instant_coord_x,instant_coord_y).isperson=0;
+            new_grid(instant_coord_x,instant_coord_y).isperson=0;
             continue;
         end
         
         nhood=Grid(instant_coord_x-1:instant_coord_x+1,instant_coord_y-1:instant_coord_y+1);        %vizsgált személy környezete 
-        nhood_new=NewGrid(instant_coord_x-1:instant_coord_x+1,instant_coord_y-1:instant_coord_y+1); %vizsgált személy környezete a köv. idõpontban (azért, hogy ha már valaki oda lépett, ahova õ akarna, akkor helybe maradjon)
+        nhood_new=new_grid(instant_coord_x-1:instant_coord_x+1,instant_coord_y-1:instant_coord_y+1); %vizsgált személy környezete a köv. idõpontban (azért, hogy ha már valaki oda lépett, ahova õ akarna, akkor helybe maradjon)
         nhood_ffval=[nhood(:).ffval];                                                               %vizsgált személy környezetének floor field értékei
 
         %ha valahol van személy vagy tárgy/fal, akkor ode ne lépjen (ne
@@ -109,54 +109,54 @@ for t=1:tnum
         %a vizsgált személy lép, ha tud hova lépni és ha még ebben az idõpontban nem lépett oda
         %senki
         if minval==inf %ha nemtud sehova lépni, akkor egyhelyben marad
-            NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
         elseif minind==1
-            if NewGrid(instant_coord_x-1,instant_coord_y-1).isperson==1
-                NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            if new_grid(instant_coord_x-1,instant_coord_y-1).isperson==1
+                new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             else
-                NewGrid(instant_coord_x-1,instant_coord_y-1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+                new_grid(instant_coord_x-1,instant_coord_y-1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             end
         elseif minind==2
-             if NewGrid(instant_coord_x,instant_coord_y-1).isperson==1
-                NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+             if new_grid(instant_coord_x,instant_coord_y-1).isperson==1
+                new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             else
-            NewGrid(instant_coord_x,instant_coord_y-1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            new_grid(instant_coord_x,instant_coord_y-1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
              end
         elseif minind==3
-             if NewGrid(instant_coord_x+1,instant_coord_y-1).isperson==1
-                NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+             if new_grid(instant_coord_x+1,instant_coord_y-1).isperson==1
+                new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             else
-            NewGrid(instant_coord_x+1,instant_coord_y-1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            new_grid(instant_coord_x+1,instant_coord_y-1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
              end
         elseif minind==4
-             if NewGrid(instant_coord_x-1,instant_coord_y).isperson==1
-                NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+             if new_grid(instant_coord_x-1,instant_coord_y).isperson==1
+                new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             else
-            NewGrid(instant_coord_x-1,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            new_grid(instant_coord_x-1,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
              end
         elseif minind==6
-             if NewGrid(instant_coord_x+1,instant_coord_y).isperson==1
-                NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+             if new_grid(instant_coord_x+1,instant_coord_y).isperson==1
+                new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             else
-            NewGrid(instant_coord_x+1,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            new_grid(instant_coord_x+1,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
              end
         elseif minind==7
-             if NewGrid(instant_coord_x-1,instant_coord_y+1).isperson==1
-                NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+             if new_grid(instant_coord_x-1,instant_coord_y+1).isperson==1
+                new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             else
-            NewGrid(instant_coord_x-1,instant_coord_y+1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            new_grid(instant_coord_x-1,instant_coord_y+1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
              end
         elseif minind==8
-             if NewGrid(instant_coord_x,instant_coord_y+1).isperson==1
-                NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+             if new_grid(instant_coord_x,instant_coord_y+1).isperson==1
+                new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             else
-            NewGrid(instant_coord_x,instant_coord_y+1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            new_grid(instant_coord_x,instant_coord_y+1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
              end
         elseif minind==9
-             if NewGrid(instant_coord_x+1,instant_coord_y+1).isperson==1
-                NewGrid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+             if new_grid(instant_coord_x+1,instant_coord_y+1).isperson==1
+                new_grid(instant_coord_x,instant_coord_y).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
             else
-            NewGrid(instant_coord_x+1,instant_coord_y+1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
+            new_grid(instant_coord_x+1,instant_coord_y+1).isperson=Grid(instant_coord_x,instant_coord_y).isperson;
              end
         end
          
@@ -165,12 +165,12 @@ for t=1:tnum
         %Grid(instant_coord_x,instant_coord_y).isperson=0;
         
     end
-        calc_dynamic_floor_field(NewGrid,floor_fields_mtx,alpha,doors)
-        temp=num2cell(calc_dynamic_floor_field(NewGrid,floor_fields_mtx,alpha,doors));
-        [NewGrid.ffval]=temp{:};
+        CalcDynamicFloorField(new_grid,floor_fields_mtx,alpha,doors)
+        temp=num2cell(CalcDynamicFloorField(new_grid,floor_fields_mtx,alpha,doors));
+        [new_grid.ffval]=temp{:};
 
-        plot_grid(NewGrid,t);       %pillanatnyi idõpont plottolása      
-        Grid=NewGrid;               %Grid frissítése
+        PlotGrid(new_grid,t);       %pillanatnyi idõpont plottolása      
+        Grid=new_grid;               %Grid frissítése
         
         %a subplottolni akart idõpontok lementése
         if isempty(find(plot_timesteps==t,1))==false
@@ -182,9 +182,9 @@ for t=1:tnum
         waitforbuttonpress;
 end
 
-plot_four_time(plot_timemat,plot_timesteps);    %subplotolni akart idõpontok plotolása
+PlotFourTimes(plot_timemat,plot_timesteps);    %subplotolni akart idõpontok plotolása
 
-function plot_four_time(dat,plot_timesteps)
+function PlotFourTimes(dat,plot_timesteps)
     
     %a default subplot túl nagy térközöket hagy, ami miatt a képek túl
     %kicsik lesznek, subtightplot függvénnyel ez kiküszöbölhetõ (nem saját
@@ -193,31 +193,31 @@ function plot_four_time(dat,plot_timesteps)
     
     figure;
     subplot(2,2,1);
-    plot_grid(dat(:,:,1),plot_timesteps(1));
+    PlotGrid(dat(:,:,1),plot_timesteps(1));
     axis off;
     subplot(2,2,2);
-    plot_grid(dat(:,:,2),plot_timesteps(2));
+    PlotGrid(dat(:,:,2),plot_timesteps(2));
     axis off;
     subplot(2,2,3);
-    plot_grid(dat(:,:,3),plot_timesteps(3));
+    PlotGrid(dat(:,:,3),plot_timesteps(3));
     axis off;
     subplot(2,2,4);
-    plot_grid(dat(:,:,4),plot_timesteps(4));
+    PlotGrid(dat(:,:,4),plot_timesteps(4));
     axis off;
     
 end
 
 %egy idõpont plotolása
-function plot_grid(Grid,t)
+function PlotGrid(Grid,t)
 
     A=2*reshape([Grid.isperson],[size(Grid)]);
     B=1*reshape([Grid.isobject],[size(Grid)]);
-    mymap=[1 1 1;0 0 0;1 0 1];
+    my_map=[1 1 1;0 0 0;1 0 1];
     %figure;
     
     imagesc(A+B);
     title(['t= ',num2str(t)]);
-    colormap(mymap);
+    colormap(my_map);
     set(gca,'YDir','normal');
     colorbar('Ticks',[0,1,2,],...
              'TickLabels',{'Üres cella','Fal/Objektum','Személy'})
@@ -226,7 +226,7 @@ function plot_grid(Grid,t)
 end
 
 
-function dyn_floor_field=calc_dynamic_floor_field(Grid,floor_fields_mtx,alpha,doors)
+function dyn_floor_field=CalcDynamicFloorField(Grid,floor_fields_mtx,alpha,doors)
     doors_range=1:size(doors,2);
     %smaller_elements_mtx=zeros(size(floor_fields_mtx)); %ehelyett lehet, hogy minden lépésben csak azon cellákra számolom ki, ahol van személy...
     %equal_elements_mtx=zeros(size(floor_fields_mtx));   %hogy melyik jobb függ az emberek, lépések számától
