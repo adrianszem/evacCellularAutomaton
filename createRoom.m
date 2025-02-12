@@ -1,10 +1,26 @@
-%function createRoom(N1,N2)
+function createRoom(N1,N2)
+%CREATEROOM Code for the GUI, which can be used for making rooms(walls, objects,
+%doors, people initial positions.
+% INPUTS: 0: 10 X 10 ROOM
+%         2: N1: LENGTH OF THE ROOM wout walls, 
+%            N2: WIDTH OF THE ROOM wout walls
+% It is possible to add a given number of
+%randomly distributed people.
+%The rooms than have to be saved by the save button.
+%To actually run the simulation: Make the room, save the configuration,then
+%use: (i)EvacCa.m for the Varas model (the static potential field model)
+%     (ii)EvacCaDistr.m for the Alizadeh (the dynamic potential field
+%     model)
 
-%kell még
-%1. add emberek
+if (nargin==0)
+    N1=10;
+    N2=10;
+elseif (nargin==2)
+    %do nothing, N1,N2 given
+else (nargin~=2 && nargin ~=0)
+    error('Zero or 2 input arguments is required');
+end
 
-N1=10;
-N2=10;
 
 fig=uifigure("Name", "Make Room");
 g1=uigridlayout(fig,[3,3]);
@@ -60,7 +76,7 @@ addStyle(uit,orangecell,"cell",findrc(floor_field,1));
 uit.DisplayDataChangedFcn=@(src,event) updateTable(src,uit,yellowcell,greycell,whitecell,bluecell,orangecell);
 btn.ButtonPushedFcn={@saveTable,editfld,uit,fig};
 fig.CloseRequestFcn = @(src,event)my_closereq(src);
-%ennél biztos lehetne szebben....
+%not the nicest way...
 btn2.ButtonPushedFcn={@GeneratePeople,editfld2,uit,fig,yellowcell,greycell,whitecell,bluecell,orangecell};
 
 
@@ -86,8 +102,9 @@ function saveTable(src,event,editfld,uit,fig)
                 save(editfld.Value,'floor_field'); %we save the people independently
             else 
                 ppl=(floor_field==2);
-                floor_field(ppl)=500;
-                save(editfld.Value,'floor_field'); %we save the people independently
+                floor_field(ppl)=200;
+                %we save the init coords of the people independently
+                save(editfld.Value,'floor_field'); 
                 save(strcat(editfld.Value,"_ppl"),'ppl')
             end
         end
@@ -99,8 +116,9 @@ function GeneratePeople(src,event,editfld2,uit,fig,yellowcell,greycell,whitecell
     num_of_ppl=str2num(editfld2.Value);
 
     floor_field=uit.DisplayData;
-    floor_field(floor_field==2)=200;%ha már volt ember, eltünnek
-    temp=(floor_field==500);%& floor_field==1 %ajtóba is kerülhet ember... mert miért ne
+    floor_field(floor_field==2)=200;
+    %a person's init coord can be in the door because why not
+    temp=(floor_field==500);%& floor_field==1 
     %floor_field=mtx;
     if isempty(num_of_ppl)
         uialert(fig,"The given input is not just one number!","Please write only a number.")
@@ -109,10 +127,13 @@ function GeneratePeople(src,event,editfld2,uit,fig,yellowcell,greycell,whitecell
     elseif sum(sum(floor_field==1|floor_field==200|floor_field==500|floor_field==2))~=(size(floor_field,1)*size(floor_field,2))
         uialert(fig,"The cannot be generated. The matrix can only have values 1,2, 200, 500... see the blue values!","Wrong values")
     else
-        %személyek random: egyenletes eloszlásba személyek kezdeti helyei (lineáris indexeléssel)
-        not_obj_indices=find(temp==0);                               %indexek ahol nincs tárgy se fal, find lassú...
-        rand_indices=(randperm(size(not_obj_indices,1),num_of_ppl))'; %ebbõl random 'num_of_ppl' darab index(ahova majd kezdetben személy kerül)
-        not_obj_indices=not_obj_indices(rand_indices);                %személyek kezdeti (lineáris) indexei
+        %persons random: uniformly distributed initial locations of persons (using linear indexing)
+        %indexes where no object nor wall, find fnc slow...
+        not_obj_indices=find(temp==0);                     
+        %from random 'num_of_ppl' piece index(where person will initially be placed)
+        rand_indices=(randperm(size(not_obj_indices,1),num_of_ppl))'; 
+        %Initial (linear) indices of people
+        not_obj_indices=not_obj_indices(rand_indices);  
         floor_field(not_obj_indices)=2;
         %change table
         uit.Data=floor_field;
@@ -135,11 +156,13 @@ function my_closereq(fig)
     end
 
 function rc=findrc(mtx,val)
+%fint the indices of the 'mtx' with values 'val'
     [r,c]=find(mtx==val);
     rc=cat(2,r,c);
 end
 
 function addColors(uit,t,yellowcell,greycell,whitecell,bluecell,orangecell)
+%we change the colors depending on the matrix values
     addStyle(uit,yellowcell,"cell",findrc(t,200));
     addStyle(uit,greycell,"cell",findrc(t,500));
     addStyle(uit,whitecell,"cell",findrc(t,1));
@@ -149,4 +172,4 @@ function addColors(uit,t,yellowcell,greycell,whitecell,bluecell,orangecell)
     addStyle(uit,bluecell,"cell",[invalidcells_r,invalidcells_c]);
 end
 
-%end
+end

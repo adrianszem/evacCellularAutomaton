@@ -1,39 +1,42 @@
 function [floor_field]=FloorField(N1,N2,doors)
-
-    %Statikus potenciálmezõt kiszámoló függvény
-    
-    %Bemenetek:
-    %0 db bemenet esetén egy elõre elkészített osztályteremmel számol
-    %3 db bemenet esetén:
-        %N1: terem hossza
-        %N2: terem szélessége
-        %ajtók elhelyezkedése a következõképpen: [elsõ ajtó elsõ
-        %koordinátája, elsõ ajtó második koordinátája; második ajtó elsõ
-        %koordinátája, második ajtó második koordinátája;...]
-        %[oszlop,sor]---EZT MAJD JAVÍT
-        
-    %Kimenet:
-        %floor_field: Statikus potenciálmezõ (MÁTRIX) (minden cellához egy érték.)
+    %FLOORFIELD Calculates the static potential field of the room, i.e. each cell is assigned a constant value
+    %representing its distance to the door, when diagonal movement is allowed.  
+    %Inputs:
+    %   In the case of 0 inputs, it calculates the floor field of an example
+    %       room
+    %   In the case of 3 inputs, the inputs are:
+    %       N1:length of the room
+    %       N2: width of the room
+    %       doors: coordinates of the room in the following way: [first door's first
+    %           coord, first door's second coordinate; second door's first
+    %           coordinate, second door's second coordinate;...]        
+    %Output:
+    %   floor_field: Static floorfield (matrix) with size N1xN2 calculated
+    %       as in Varas, A., et al. "Cellular automaton model for evacuation process with obstacles." Physica A: Statistical Mechanics and its Applications 382.2 (2007): 631-642.
+    %       
         
 %N1=14;
 %N2=18;
 %doors=[7,1;8,1];
 %doors=[4,1;5,1;10,1;11,1];
-lambda=3/2;                                            %diagonális mozgás "távolsága"
-%lambda=500;                                           %diagonális mozgás nem megengedett
+%value for the diagonal movement
+lambda=3/2;  
+%in the case when diagonal movement is not allowed
+%lambda=500;                                           
 
-%1:ajtó
-%200:üres
+%1:door
+%200:empty
 %500:obstacle
 
-%osztályterem
+%schoolroom example
 if (nargin==0)
     %
-    osztalyterem=load('oterem.mat');%MIeRT STRUCT TALaN KeSoBB MIATT, CHECK
+    osztalyterem=load('oterem.mat');
     floor_field=struct2array(osztalyterem.osztalyterem);
-    N1=size(floor_field,1)-2;%-2 a fal  miatt
+    %-2 because of the walls on the edges
+    N1=size(floor_field,1)-2;
     N2=size(floor_field,2)-2;
-    %ajtó helyének lehetséges megváltoztatása
+    %change of the coordinates of the door
     %{
     floor_field(floor_field==1)=500;
     floor_field([8,9,8,9],[1,1,18,18])=1;
@@ -41,12 +44,14 @@ if (nargin==0)
     [doors_x,doors_y]=find(floor_field==1);
     doors=cat(2,doors_x,doors_y);
     
-%üres terem (fallal dim n1+2 x n2+2)
+%empty room (with walls dim n1+2 x n2+2)
 elseif (nargin==3)
-    floor_field=200*ones(N1,N2);                       %floor field inicializálása
-    floor_field=padarray(floor_field,[1,1],500,'both');%falak
- 
-    floor_field(sub2ind(size(floor_field),doors(:,1),doors(:,2)))=1;   %ajtók  
+    %floor field inicialization
+    floor_field=200*ones(N1,N2);
+    %adding walls
+    floor_field=padarray(floor_field,[1,1],500,'both');
+    %adding doors
+    floor_field(sub2ind(size(floor_field),doors(:,1),doors(:,2)))=1;     
 
 elseif (nargin==2)
     floor_field=N1;
@@ -58,19 +63,19 @@ elseif (nargin~=3 && nargin ~=0 && nargin ~=2)
     error('Zero or 3 input arguments is required');
 end
 
-%innentõl a grid minden cellájának floor field értéket ad a dokumentációban
-%leírt algoritmus szerint
-
-[szomsz_cell]=DoorSzomsz(doors,N1,N2);                  %ajtó szomszédai
+%neighbours of the doors
+[szomsz_cell]=DoorSzomsz(doors,N1,N2);                  
 
 now_szomsz=[];
-while sum(ismember(floor_field(:),200))~=0             %ameddig nincs minden cellának értéke (200-ra volt inicializálva)
+% while cycle until not all elements of the matrix has a value (it was
+% inicialized to 200)
+while sum(ismember(floor_field(:),200))~=0             
     for i=1:size(szomsz_cell,1)
         
        szomsz=szomsz_cell(i,:);
-       %egy cella összes szomszédának megnézése és frissítése, ha ez a
-       %szomszéd tud adni neki kisebb értéket, akkor frissítjük a kisebb
-       %értékre és megkeressük az õ szomszédait is majd (nowszomsz)
+       %check and update all neighbours of a cell, if this neighbour can give
+       % it a lower value, then update to the lower value and find its neighbours
+       % (nowszomsz) 
        if floor_field(szomsz(1),szomsz(2))>floor_field(szomsz(1)-1,szomsz(2))+1 && floor_field(szomsz(1),szomsz(2))~=500
            floor_field(szomsz(1),szomsz(2))=floor_field(szomsz(1)-1,szomsz(2))+1; now_szomsz=[now_szomsz;szomsz(1),szomsz(2)];  end
        
@@ -101,8 +106,8 @@ while sum(ismember(floor_field(:),200))~=0             %ameddig nincs minden cel
     
 end
 
-
-%PlotFloorField(floor_field);                      %floor_field plotolása
+%plotting of the floor field
+%PlotFloorField(floor_field);                      
 
 %Manhattan metrika-féle floor field, amikor diagonális mozgás nem
 %megengedett
@@ -120,15 +125,19 @@ end
 %}
 
 function PlotFloorField(floor_field)
+%The function plots the floor_field values with a colormap
    
     figure('Name','Floor Field values');
     imagesc((floor_field));
-    set(gca,'YDir','normal');                   %y tengely megfordítása (imagesc-nél fordítva van a default) 
-    colormap(flipud(hot));                      %fehér a legkisebb érték, egyre nagyobb érték egyre pirosabb
-    caxis([0,max(max(floor_field(floor_field~=500)))+3]);%ne 500-ig menjen a colormap, mert a floor field értékek kb 0-22 között vannak
+    %reverse y-axis (imagesc has it reversed by default)
+    set(gca,'YDir','normal');
+    %white is the lowest value, the higher the value the redder
+    colormap(flipud(hot));
+    %should not go up to 500(values of the walls/objects, because the floor
+    %field values are between 0-22 for decently sized rooms
+    caxis([0,max(max(floor_field(floor_field~=500)))+3]);
     
-    %szöveg ráírása a figure-ra:
-    %ehhez a következõ kódot írtam át:
+    %writing text on the figure based on partly the code:
     %(https://www.mathworks.com/matlabcentral/answers/91384-how-can-i-display-the-numerical-values-of-each-cell-as-text-in-my-pcolor-plot)
     %
     pos=get(gca,'position');
@@ -148,11 +157,14 @@ function PlotFloorField(floor_field)
     end
     
     cb=colorbar;
-    cb.Position=[0.9189 0.1900 0.0236 0.6500]; %colorbar helyének megváltoztatása
+    %change of the position of the colorbar
+    cb.Position=[0.9189 0.1900 0.0236 0.6500]; 
 end  
 
 function [new_szomsz]=SzomszedberakEsFalkiszed(floor_field,now_szomsz)
+%get the neighbouring coordinates (which are not walls/objects
     now_szomsz=unique(now_szomsz,'rows');
+    %first way to calculate it: nonvectorised version
     %{
     new_szomsz=[];
     
@@ -170,20 +182,20 @@ function [new_szomsz]=SzomszedberakEsFalkiszed(floor_field,now_szomsz)
     end
     %}
     %{
-    %kerdes, hogy ez a gyorsabb, vagy a fenti...
+    %second way
     new_szomsz=zeros(8*size(now_szomsz,2),2);
     for ii=1:size(now_szomsz,1)
         new_szomsz(8*(ii-1)+1:8*ii,:)=now_szomsz(ii,:)+[1,0;-1,0;0,1;0,-1;1,1;-1,-1;1,-1;-1,1];
     end
     %}
-    %vektorizált:leggyorsabb, de  bsxfun-all talán méggyorsabb is lehetne...
+    %vectorised version:fastest, but with bsxfun it can be possibly faster...
     %
     a=[1,0;-1,0;0,1;0,-1;1,1;-1,-1;1,-1;-1,1];
     new_szomsz=now_szomsz(reshape(repmat(1:size(now_szomsz,1),8,1),size(now_szomsz,1)*8,1),:)+repmat(a,size(now_szomsz,1),1);
     %}
     
     new_szomsz=unique(new_szomsz,'rows');
-    %a fal és objektumok indexeinek kiszedése
+    %removing wall and object indexes
     linear_new_szomsz = sub2ind(size(floor_field), new_szomsz(:,1), new_szomsz(:,2));
     AA=(floor_field(linear_new_szomsz)~=500 & floor_field(linear_new_szomsz)~=1);
     linear_new_szomsz=linear_new_szomsz(AA);
@@ -191,13 +203,10 @@ function [new_szomsz]=SzomszedberakEsFalkiszed(floor_field,now_szomsz)
     new_szomsz=cat(2,x,y);
 end
 
-
-
-
-%az ajtók nemajtó/fal szomszédainak megkeresése (cska ha az ajtó a szélen
-%van) szebb, mint anno
-%sajnos a sarkokon ez megbukik
 function [szomsz_cell]=DoorSzomsz(door,N1,N2)
+%finds the non-door neighbours of a door (in the case if the door is in the
+%edge 
+    %without vectorization:
     %{
     szomsz_cell=zeros(size(door,1)*3,2);
 
@@ -215,7 +224,7 @@ function [szomsz_cell]=DoorSzomsz(door,N1,N2)
         szomsz_cell(3*(ii-1)+1:3*ii,:)=door_szomsz;
     end
     %}
-    %vektorizált változat (bsxfun késöbb)
+    %with  vectorization 
     a=[1,0;-1,0;0,1;0,-1;1,1;-1,-1;1,-1;-1,1];
     szomsz_cell=door(reshape(repmat(1:size(door,1),8,1),size(door,1)*8,1),:)+repmat(a,size(door,1),1);
     szomsz_cell=unique(szomsz_cell,'rows');       %duplikátumok kiszedése

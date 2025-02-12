@@ -1,8 +1,18 @@
 function doors_cell=doorsearch(floor_field)
-%load('proba.mat');
-%floor_field(4,1)=1;
-%floor_field(6,1)=1;
-%floor_field(9,1)=500;
+% DOORSEARCH The function searches for the doors
+% Meaning if two doors are next to each other, the output will give one
+% door with two cells.
+% Input: floorfield - Matrix where the value 1 are the doors
+% output: doors_cell - Cells are the door coordinates, which are Nx2 sized
+% matrices where N is the number or grids of the door
+
+%Example: 
+%   floor_field=zeros(10)
+%   floor_field(1,5:7)=1
+%   floor_field(10,4)=1
+%   floor_field(5:6,10)=1
+%   doors_cell=doorsearch(floor_field)
+%   Output: {[10 4]}    {[1 5;1 6;1 7]}    {[5 10]}    {[6 10]}
 
 N1=size(floor_field,1);
 N2=size(floor_field,2);
