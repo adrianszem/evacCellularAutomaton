@@ -48,7 +48,7 @@ grid_size=size(floor_field);
 %cell initialization
 Grid=struct('ffval',[],'isobject',[],'isperson',cell(size(floor_field)),'num_of_smaller',[]);   
 
-num_of_people=40;
+%num_of_people=40;
 
 if (nargin==2)
     %initial locations of persons uniformly distributed (by linear indexing)
@@ -210,7 +210,7 @@ for t=1:t_num
         temp=num2cell(CalcDynamicFloorField(new_grid,floor_fields_mtx,alpha,doors));
         [new_grid.ffval]=temp{:};
         
-        %for plotting
+        % plotting
         PlotGrid(new_grid,t);
         %grid refresh/update
         Grid=new_grid;               
@@ -235,7 +235,7 @@ function PlotFourTimes(dat,plot_timesteps)
 
     subplot = @(m,n,p) subtightplot (m, n, p, [0.04 0.05], [0.1 0.1], [0.1 0.01]);
     
-    figure;
+    figure(2);
     subplot(2,2,1);
     PlotGrid(dat(:,:,1),plot_timesteps(1));
     axis off;
